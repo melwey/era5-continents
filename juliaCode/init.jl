@@ -1,0 +1,5 @@
+cd("./juliaCode/")
+import Pkg; Pkg.activate(".")
+Pkg.add("YAXArrays")
+Pkg.add( "NetCDF")
+Pkg.add("ArchGDAL")
