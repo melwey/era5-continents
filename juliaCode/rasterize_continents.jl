@@ -49,6 +49,10 @@ heatmap(replace(dts'[end:-1:1,:], missing => 0))
 # GeoTiff references the top left of the tile. Hence, the axes have to be shifted to match the ERA5 datasets.
 
 # use the land sea mask as model.
+if !isfile("../data/land_sea_mask.nc")
+    run(`python -c ../pyCode/download_lsm.py`)
+end
+
 lsm = open_dataset("../data/land_sea_mask.nc")
 lsm_notime = lsm.lsm[time = 1]
 axs = lsm_notime.axes
