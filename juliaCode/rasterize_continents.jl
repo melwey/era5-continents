@@ -13,16 +13,20 @@ if !isfile("../data/World_Continents.zip")
 end
 
 
-# if isfile("../output/World_Continents_raster_0d25_180jl.nc")
-#     rm("../output/World_Continents_raster_0d25_180jl.nc")
-# end
+if !isdir("../output/") 
+    mkdir("../output/")
+end
 
 if isfile("../output/World_Continents_raster_0d25_180jl.tif")
     rm("../output/World_Continents_raster_0d25_180jl.tif")
 end
 
+# load modules if on cluster
+if haskey(ENV,"LOADEDMODULES")
+    run(`ml gnu12/12.2.0  openmpi4/4.1.4 gdal/3.5.3`)
+end
 # run(`gdal_rasterize -l World_Continents -at -a FID -tr 0.25 0.25 -te -180.125 -90.125 179.875 90.125 -a_srs EPSG:4326 -a_nodata 0.0 -ot Byte /vsizip/../data/World_Continents.zip/World_Continents.shp ../output/World_Continents_raster_0d25_180jl.nc`)
-run(`gdal_rasterize -l World_Continents -at -a FID -tr 0.25 0.25 -te -180.125 -90.125 179.875 90.125 -a_srs EPSG:4326 -a_nodata 0.0 -ot Byte /vsizip/../data/World_Continents.zip/World_Continents.shp ../output/World_Continents_raster_0d25_180jl.tif`)
+run(`gdal_rasterize -l World_Continents -at -a FID -tr 0.25 0.25 -te -180.125 -90.125 179.875 90.125 -a_srs WGS84 -a_nodata 0.0 -ot Byte /vsizip/../data/World_Continents.zip/World_Continents.shp ../output/World_Continents_raster_0d25_180jl.tif`)
 
 # dsn = YAXArrays.open_dataset("../output/World_Continents_raster_0d25_180jl.nc", driver = :netcdf)
 dst = open_dataset("../output/World_Continents_raster_0d25_180jl.tif", driver = :gdal)
@@ -30,6 +34,7 @@ dst = open_dataset("../output/World_Continents_raster_0d25_180jl.tif", driver = 
 # cn = YAXArrays.Cube(dsn) # ERROR: ArgumentError: Could not promote element types of cubes in dataset to a common concrete type, because of Variable crs
 ct = Cube(dst)
 dt = copy(ct.data)
+heatmap(replace(dt'[end:-1:1,:], missing => 0))
 # shift data
 tmp = range(-180,179.75,1440)
 circshift(tmp, 180*4)
@@ -50,7 +55,7 @@ heatmap(replace(dts'[end:-1:1,:], missing => 0))
 
 # use the land sea mask as model.
 if !isfile("../data/land_sea_mask.nc")
-    run(`python -c ../pyCode/download_lsm.py`)
+    run(`python ../pyCode/download_lsm.py`)
 end
 
 lsm = open_dataset("../data/land_sea_mask.nc")
